@@ -1,0 +1,60 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code (triage)
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Restringido a los comandos gh concretos que necesita este triage (mínimo privilegio).
+          claude_args: '--allowedTools "Bash(gh label list:*),Bash(gh label create:*),Bash(gh issue edit:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(cat:*)"'
+
+          prompt: |
+            Estás analizando el issue #${{ github.event.issue.number }} del repositorio
+            ${{ github.repository }} (un juego de Tetris en JavaScript vanilla; ver CLAUDE.md
+            para la arquitectura del tablero, piezas, colisión y game loop).
+
+            1. Lee `.github/labels.yml` para conocer la taxonomía de labels del proyecto.
+               No uses ni crees labels fuera de esa lista.
+            2. Asegúrate de que esas labels existan en el repo: por cada una, ejecuta
+               `gh label create <nombre> --color <color> --description "<descripcion>" --force`
+               (--force lo hace idempotente si ya existe).
+            3. Analiza el título y cuerpo del issue #${{ github.event.issue.number }}
+               (usa `gh issue view ${{ github.event.issue.number }}` si necesitas más contexto)
+               y determina qué labels de la taxonomía aplican (puede ser más de una).
+               Aplícalas con
+               `gh issue edit ${{ github.event.issue.number }} --add-label "<label1>,<label2>"`.
+            4. Publica un comentario de diagnóstico en español con
+               `gh issue comment ${{ github.event.issue.number }} --body "..."` que incluya:
+               - Resumen del problema en 1-2 frases.
+               - Causa probable o hipótesis técnica, citando funciones/archivos concretos de
+                 game.js cuando aplique (spawn, collide, rotateCW, tryRotate, loop, lockPiece,
+                 clearLines, merge, etc.).
+               - Enfoque sugerido para la solución (sin implementarla), como punto de partida
+                 para quien luego escriba el código.
+               - Si falta información para diagnosticar (pasos de reproducción, navegador,
+                 capturas, etc.), pídela explícitamente en el comentario en vez de adivinar.
+            5. Evita comentarios duplicados: si al revisar el issue con
+               `gh issue view ${{ github.event.issue.number }} --comments` ves que ya publicaste
+               antes un comentario de diagnóstico en este issue, actualízalo con
+               `gh issue comment ${{ github.event.issue.number }} --edit-last --body "..."`
+               en lugar de crear uno nuevo.

@@ -1,0 +1,39 @@
+# Taxonomía de labels para issues de este proyecto (Tetris).
+# Usada por el workflow .github/workflows/claude-issue-triage.yml para el triage
+# automático con Claude: no crear ni asignar labels fuera de esta lista.
+
+- name: bug
+  color: "d73a4a"
+  description: Algo no funciona como se espera
+
+- name: mejora
+  color: "0075ca"
+  description: Nueva funcionalidad o mejora sobre algo existente
+
+- name: rendimiento
+  color: "e99695"
+  description: Problemas de rendimiento o fluidez (FPS, lag)
+
+- name: ui
+  color: "a371f7"
+  description: Interfaz visual, estilos o layout
+
+- name: gameplay
+  color: "2ea44f"
+  description: Mecánicas de juego (colisiones, rotación, piezas, puntuación)
+
+- name: pregunta
+  color: "d4c5f9"
+  description: Pregunta o duda que no implica un bug
+
+- name: documentación
+  color: "cfd3d7"
+  description: Mejoras o correcciones en README/CLAUDE.md
+
+- name: duplicado
+  color: "cfd3d7"
+  description: Ya reportado en otro issue
+
+- name: wontfix
+  color: "ffffff"
+  description: No se abordará
