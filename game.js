@@ -151,6 +151,11 @@ function spawn() {
 }
 
 function updateHUD() {
+  // Recalcula nivel/velocidad a partir del nivel inicial de esta partida
+  // (sessionStartLevel) para que un nivel inicial > 1 no se pierda cuando
+  // clearLines() reasigna `level` con la fórmula base (que asume inicio en 1).
+  level = sessionStartLevel + Math.floor(lines / 10);
+  dropInterval = dropIntervalForLevel(level);
   scoreEl.textContent = score.toLocaleString();
   linesEl.textContent = lines;
   levelEl.textContent = level;
@@ -229,14 +234,13 @@ function endGame() {
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
-  if (!paused) {
+  if (paused) {
+    cancelAnimationFrame(animId);
+    openPauseMenu();
+  } else {
+    closePauseMenu();
     lastTime = performance.now();
     loop(lastTime);
-  } else {
-    cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
   }
 }
 
@@ -261,10 +265,11 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
+  sessionStartLevel = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = dropIntervalForLevel(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
@@ -276,7 +281,8 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
+  if (menuOpen) return;
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -325,5 +331,79 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 applyTheme(localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark');
+
+// ---- Menú de pausa ----
+const START_LEVEL_KEY = 'tetris-start-level';
+const MIN_START_LEVEL = 1;
+const MAX_START_LEVEL = 20;
+
+// Nivel con el que arrancó la partida actual (distinto de `startLevel`, que es
+// la preferencia para la PRÓXIMA partida y puede cambiar mientras se está en
+// pausa sin afectar la partida en curso). Usado por updateHUD() para derivar
+// el nivel/velocidad reales a partir de las líneas limpiadas.
+let sessionStartLevel = 1;
+
+// Misma fórmula que usa clearLines() para la velocidad de caída según nivel.
+function dropIntervalForLevel(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
+}
+
+const pauseOverlay = document.getElementById('pause-overlay');
+const pauseResumeBtn = document.getElementById('pause-resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const pauseControlsBtn = document.getElementById('pause-controls-btn');
+const pauseControlsList = document.getElementById('pause-controls-list');
+const levelDownBtn = document.getElementById('level-down-btn');
+const levelUpBtn = document.getElementById('level-up-btn');
+const startLevelValue = document.getElementById('start-level-value');
+
+let menuOpen = false;
+
+function clampStartLevel(value) {
+  return Math.min(MAX_START_LEVEL, Math.max(MIN_START_LEVEL, value));
+}
+
+let startLevel = clampStartLevel(parseInt(localStorage.getItem(START_LEVEL_KEY), 10) || MIN_START_LEVEL);
+
+function setStartLevel(value) {
+  startLevel = clampStartLevel(value);
+  localStorage.setItem(START_LEVEL_KEY, String(startLevel));
+  updateStartLevelUI();
+}
+
+function updateStartLevelUI() {
+  startLevelValue.textContent = startLevel;
+}
+
+function openPauseMenu() {
+  menuOpen = true;
+  updateStartLevelUI();
+  pauseControlsList.classList.add('hidden');
+  pauseOverlay.classList.remove('hidden');
+}
+
+function closePauseMenu() {
+  menuOpen = false;
+  pauseOverlay.classList.add('hidden');
+}
+
+pauseResumeBtn.addEventListener('click', () => {
+  if (paused) togglePause();
+});
+
+pauseRestartBtn.addEventListener('click', () => {
+  closePauseMenu();
+  paused = false;
+  init();
+});
+
+pauseControlsBtn.addEventListener('click', () => {
+  pauseControlsList.classList.toggle('hidden');
+});
+
+levelDownBtn.addEventListener('click', () => setStartLevel(startLevel - 1));
+levelUpBtn.addEventListener('click', () => setStartLevel(startLevel + 1));
+
+updateStartLevelUI();
 
 init();
