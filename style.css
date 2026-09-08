@@ -233,3 +233,119 @@ kbd {
 #restart-btn:hover {
   background: var(--btn-hover-bg);
 }
+
+/* ---- Menú de pausa ---- */
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
+}
+
+.pause-overlay.hidden {
+  display: none;
+}
+
+.pause-box {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  min-width: 220px;
+}
+
+.pause-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--panel-value);
+}
+
+.pause-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.level-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.level-selector button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--toggle-border);
+  background: var(--toggle-bg);
+  color: var(--fg);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.level-selector button:hover {
+  background: var(--btn-hover-bg);
+  color: var(--btn-color);
+}
+
+#start-level-value {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--panel-value);
+  min-width: 24px;
+}
+
+.pause-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.pause-actions button {
+  background: var(--btn-bg);
+  color: var(--btn-color);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
+}
+
+.pause-actions button:hover {
+  background: var(--btn-hover-bg);
+}
+
+.pause-controls-list ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.pause-controls-list li {
+  font-size: 12px;
+  color: var(--controls-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pause-controls-list.hidden {
+  display: none;
+}
