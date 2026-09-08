@@ -26,6 +26,18 @@ const PIECES = [
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
 ];
 
+// Paleta alternativa usada por el skin "pastel"
+const PASTEL_COLORS = [
+  null,
+  '#a8e6f0', // I
+  '#fff2b3', // O
+  '#e0b3f0', // T
+  '#b8e6b0', // S
+  '#f0b3b3', // Z
+  '#b3d4f5', // J
+  '#f5cfa3', // L
+];
+
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
 const canvas = document.getElementById('board');
@@ -156,20 +168,87 @@ function updateHUD() {
   levelEl.textContent = level;
 }
 
+// Dibuja un rectángulo con esquinas redondeadas, usando ctx.roundRect si está
+// disponible o construyendo el trazado a mano con quadraticCurveTo si no.
+function drawRoundedRect(context, x, y, w, h, r) {
+  if (typeof context.roundRect === 'function') {
+    context.beginPath();
+    context.roundRect(x, y, w, h, r);
+    context.fill();
+    return;
+  }
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.lineTo(x + w - r, y);
+  context.quadraticCurveTo(x + w, y, x + w, y + r);
+  context.lineTo(x + w, y + h - r);
+  context.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  context.lineTo(x + r, y + h);
+  context.quadraticCurveTo(x, y + h, x, y + h - r);
+  context.lineTo(x, y + r);
+  context.quadraticCurveTo(x, y, x + r, y);
+  context.closePath();
+  context.fill();
+}
+
+// Superpone una sub-cuadrícula con ligeras variaciones de brillo para dar
+// una textura "pixel art" sobre el relleno base del bloque.
+function drawPixelTexture(context, bx, by, bw, bh) {
+  const cells = 4;
+  const cw = bw / cells;
+  const ch = bh / cells;
+  for (let r = 0; r < cells; r++) {
+    for (let c = 0; c < cells; c++) {
+      context.fillStyle = (r + c) % 2 === 0 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)';
+      context.fillRect(bx + c * cw, by + r * ch, cw, ch);
+    }
+  }
+}
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  const bx = x * size + 1;
+  const by = y * size + 1;
+  const bw = size - 2;
+  const bh = size - 2;
+
+  if (currentSkin === 'neon') {
+    const color = COLORS[colorIndex];
+    context.save();
+    context.shadowColor = color;
+    context.shadowBlur = size * 0.4;
+    context.fillStyle = color;
+    context.fillRect(bx, by, bw, bh);
+    context.restore();
+  } else if (currentSkin === 'pastel') {
+    context.fillStyle = PASTEL_COLORS[colorIndex];
+    drawRoundedRect(context, bx, by, bw, bh, Math.max(3, size * 0.2));
+  } else {
+    // retro y pixel comparten el relleno base cuadrado
+    context.fillStyle = COLORS[colorIndex];
+    context.fillRect(bx, by, bw, bh);
+    if (currentSkin === 'pixel') drawPixelTexture(context, bx, by, bw, bh);
+  }
+
+  // highlight superior: se mantiene en "retro" y "pixel"; se omite en
+  // "neon" (el glow ya aporta luz) y "pastel" (no encaja con el look suave)
+  if (currentSkin === 'retro' || currentSkin === 'pixel') {
+    context.fillStyle = 'rgba(255,255,255,0.12)';
+    context.fillRect(bx, by, bw, 4);
+  }
+
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
-  ctx.strokeStyle = gridColor;
+  if (currentSkin === 'neon') {
+    ctx.strokeStyle = 'rgba(120, 220, 255, 0.15)';
+  } else if (currentSkin === 'pastel') {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+  } else {
+    ctx.strokeStyle = gridColor;
+  }
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -325,5 +404,26 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 applyTheme(localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark');
+
+// ---- Skins visuales ----
+const SKIN_KEY = 'tetris-skin';
+const SKINS = ['retro', 'neon', 'pastel', 'pixel'];
+const skinSelect = document.getElementById('skin-select');
+let currentSkin = 'retro';
+
+function applySkin(skin) {
+  currentSkin = SKINS.includes(skin) ? skin : 'retro';
+  document.documentElement.dataset.skin = currentSkin;
+  skinSelect.value = currentSkin;
+  if (current) draw();
+}
+
+skinSelect.addEventListener('change', () => {
+  const skin = skinSelect.value;
+  localStorage.setItem(SKIN_KEY, skin);
+  applySkin(skin);
+});
+
+applySkin(localStorage.getItem(SKIN_KEY) || 'retro');
 
 init();

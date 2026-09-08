@@ -80,10 +80,16 @@ body {
   text-shadow: 0 0 20px var(--title-shadow);
 }
 
-.theme-toggle {
+.top-controls {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
   width: 36px;
   height: 36px;
   display: flex;
@@ -100,6 +106,23 @@ body {
 
 .theme-toggle:hover {
   transform: scale(1.08);
+}
+
+.skin-select {
+  height: 36px;
+  padding: 0 8px;
+  background: var(--toggle-bg);
+  border: 1px solid var(--toggle-border);
+  border-radius: 6px;
+  color: var(--fg);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.skin-select:hover {
+  background: var(--kbd-bg);
 }
 
 .game-container {
@@ -151,6 +174,18 @@ body {
   border: 1px solid var(--board-border);
   background: var(--board-bg);
   border-radius: 4px;
+}
+
+/* ---- Skins visuales ---- */
+[data-skin="neon"] #board,
+[data-skin="neon"] #next-canvas {
+  background: #000000;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.25);
+}
+
+[data-skin="pastel"] #board,
+[data-skin="pastel"] #next-canvas {
+  background: #fdf6f0;
 }
 
 /* ---- Controles ---- */
