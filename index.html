@@ -8,7 +8,15 @@
 </head>
 <body>
   <div class="wrapper">
-    <button id="theme-toggle" class="theme-toggle" type="button" title="Cambiar tema" aria-label="Cambiar a modo claro">🌙</button>
+    <div class="top-controls">
+      <select id="skin-select" class="skin-select" title="Cambiar skin visual" aria-label="Cambiar skin visual">
+        <option value="retro">Retro</option>
+        <option value="neon">Neon</option>
+        <option value="pastel">Pastel</option>
+        <option value="pixel">Pixel art</option>
+      </select>
+      <button id="theme-toggle" class="theme-toggle" type="button" title="Cambiar tema" aria-label="Cambiar a modo claro">🌙</button>
+    </div>
     <h1 class="game-title">TETRIS GAME</h1>
     <div class="game-container">
       <canvas id="board" width="300" height="600"></canvas>
